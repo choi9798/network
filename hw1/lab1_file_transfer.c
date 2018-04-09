@@ -33,7 +33,7 @@ void* SendFileToClient(int *arg)
         if(fp==NULL)
         {
             printf("File opern error");
-            return 1;   
+            return;   
         }   
 
         /* Read data from file and send it */
@@ -101,7 +101,7 @@ void tcp_send()
     if(listen(listenfd, 10) == -1)
     {
         printf("Failed to listen\n");
-        return -1;
+        return;
     }
 
     while(1)
@@ -135,7 +135,7 @@ void tcp_receive()
     if((sockfd = socket(AF_INET, SOCK_STREAM, 0))< 0)
     {
         printf("\n Error : Could not create socket \n");
-        return 1;
+        return;
     }
 
     /* Initialize sockaddr_in data structure */
@@ -148,7 +148,7 @@ void tcp_receive()
     if(connect(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr))<0)
     {
         printf("\n Error : Connect Failed \n");
-        return 1;
+        return;
     }
 
     printf("Connected to ip: %s : %d\n",inet_ntoa(serv_addr.sin_addr),ntohs(serv_addr.sin_port));
@@ -164,7 +164,7 @@ void tcp_receive()
     	if(NULL == fp)
     	{
        	 printf("Error opening file");
-         return 1;
+         return;
     	}
     long double sz=1;
     /* Receive data in chunks of 256 bytes */
@@ -193,21 +193,25 @@ int main(int argc, char *argv[])
 	strcpy(protocol, argv[1]);
 	strcpy(sr, argv[2]);
 	strcpy(ip, argv[3]);
+    port = atoi(argv[4]);
 	
 	if(strcmp("tcp", protocol) == 0)
 	{
 		if(strcmp("send", sr) == 0)
+        {
+            strcpy(fname, argv[5]);
 			tcp_send();
+        }
 		else
 			tcp_receive();
 	}
-	else 
+/*	else 
 	{
 		if(strcmp("send", sr) == 0)
 			udp_send();
 		else
 			udp_receive();
-	}
+	}*/
 		
     return 0;
 }
