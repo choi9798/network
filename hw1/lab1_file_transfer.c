@@ -187,6 +187,74 @@ void tcp_receive()
     return;
 }
 
+void udp_send()
+{
+    int sockfd, n, fd;
+    struct sockaddr_in servaddr;
+    char buf[1024];
+
+    bzero(&servaddr, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_port = htons(port);
+    inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    
+    sendto(sockfd, ip, strlen(ip), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
+    n = recvfrom(sockfd, buf, MAXLINE, 0, NULL, NULL);
+    if (!strncmp(buf, "ok", 2)) {
+        printf("Filename sent.\n");
+    }
+    
+    fd = open(fname, O_RDONLY);
+    while ((n = read(fd, buf, MAXLINE)) > 0) {
+        sendto(sockfd, buf, n, 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
+    }
+    sendto(sockfd, "END", strlen("END"), 0, (struct sockaddr *) &servaddr, sizeof(servaddr));
+    
+}
+
+void udp_receive()
+{
+    int sockfd;
+    struct sockaddr_in servaddr, cliaddr;
+
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    bzero(&servaddr, sizeof(servaddr));
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    servaddr.sin_port = htons(SERV_PORT);
+
+    bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr));
+
+    run(sockfd, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
+
+}
+
+void run(int sockfd, struct sockaddr *cliaddr, socklen_t clilen)
+{
+    int n, fd;
+    socklen_t len;
+    char buf[1024];
+
+    len = clilen;
+    n = recvfrom(sockfd, buf, MAXLINE, 0, cliaddr, &len);
+    buf[n] = 0;
+    printf("Received from client: [%s]\n", buf);
+    sendto(sockfd, "ok", strlen("ok"), 0, cliaddr, len);
+    fd = open(buf, O_RDWR | O_CREAT, 0666);
+
+    while ((n = recvfrom(sockfd, buf, MAXLINE, 0, cliaddr, &len))) {
+        buf[n] = 0;
+        printf("%s", buf);
+        if (!(strcmp(buf, END_FLAG))) {
+            break;
+        }
+        write(fd, buf, n);
+    }
+    close(fd);
+}
+
 int main(int argc, char *argv[])
 {
 	
