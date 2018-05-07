@@ -68,7 +68,7 @@ int main (int argc, char *argv[ ])
 	  printf("Sending datagram message...OK\n");
 	}*/
 	
-	sendto(sd, "1.jpg", strlen("1.jpg"), 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
+	sendto(sd, "1.jpg", 1024, 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
 	n = recvfrom(sd, data, 1024, 0, NULL, NULL);
 	/*if (!strncmp(buf, "ok", 2)) {
 		printf("Filename sent.\n");
