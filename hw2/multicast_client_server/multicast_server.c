@@ -6,19 +6,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+
 struct in_addr localInterface;
 struct sockaddr_in groupSock;
 int sd;
 char ip[50];
+char fname[100];
 char databuf[1024] = "Multicast test message lol!";
+char data[1024];
 int datalen = sizeof(databuf);
 FILE *fp;
 
- 
+
+
 int main (int argc, char *argv[ ])
 {
 /* Create a datagram socket on which to send. */
 	strcpy(ip, argv[1]);
+	strcpy(fname, argv[2]);
 	sd = socket(AF_INET, SOCK_DGRAM, 0);
 	if(sd < 0)
 	{
@@ -48,13 +54,6 @@ int main (int argc, char *argv[ ])
 	else
 	  printf("Setting the local interface...OK\n");
 
-	fp = fopen("1.jpg","rb");
-	if(fp==NULL)
-	{
-		printf("File open error");
-	}
-
-
 	/* Send a message to the multicast group specified by the*/
 	/* groupSock sockaddr structure. */
 	/*int datalen = 1024;*/
@@ -63,7 +62,22 @@ int main (int argc, char *argv[ ])
 		perror("Sending datagram message error");
 	}
 	else
+	{
 	  printf("Sending datagram message...OK\n");
+	}
+	
+	//sendto(sd target, strlen(target), 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
+	n = recvfrom(sd, data, 1024, 0, NULL, NULL);
+	if (!strncmp(buf, "ok", 2)) {
+		printf("Filename sent.\n");
+	}
+
+	fd = open(fname, RDONLY);
+	while ((n = read(fp, data, 1024)) > 0) {
+		sendto(sd, data, n, 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
+	}
+	sendto(sd, "=======END", strlen(END_FLAG), 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
+	
 	 
 	return 0;
 }
