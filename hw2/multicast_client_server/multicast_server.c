@@ -1,5 +1,6 @@
 /* Send Multicast Datagram code example. */
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -16,7 +17,8 @@ char fname[100];
 char databuf[1024] = "Multicast test message lol!";
 char data[1024];
 int datalen = sizeof(databuf);
-FILE *fp;
+int fp;
+int n;
 
 
 
@@ -57,26 +59,26 @@ int main (int argc, char *argv[ ])
 	/* Send a message to the multicast group specified by the*/
 	/* groupSock sockaddr structure. */
 	/*int datalen = 1024;*/
-	if(sendto(sd, databuf, datalen, 0, (struct sockaddr*)&groupSock, sizeof(groupSock)) < 0)
+/*	if(sendto(sd, databuf, datalen, 0, (struct sockaddr*)&groupSock, sizeof(groupSock)) < 0)
 	{
 		perror("Sending datagram message error");
 	}
 	else
 	{
 	  printf("Sending datagram message...OK\n");
-	}
+	}*/
 	
-	//sendto(sd target, strlen(target), 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
+	sendto(sd, "1.jpg", strlen("1.jpg"), 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
 	n = recvfrom(sd, data, 1024, 0, NULL, NULL);
-	if (!strncmp(buf, "ok", 2)) {
+	/*if (!strncmp(buf, "ok", 2)) {
 		printf("Filename sent.\n");
-	}
+	}*/
 
-	fd = open(fname, RDONLY);
+	fp = open(fname, O_RDONLY);
 	while ((n = read(fp, data, 1024)) > 0) {
 		sendto(sd, data, n, 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
 	}
-	sendto(sd, "=======END", strlen(END_FLAG), 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
+	sendto(sd, "=======END", strlen("=======END"), 0, (struct sockaddr *) &groupSock, sizeof(groupSock));
 	
 	 
 	return 0;
