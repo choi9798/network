@@ -5,16 +5,24 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
  
 struct sockaddr_in localSock;
 struct ip_mreq group;
 int sd;
 int datalen;
 char databuf[1024];
- 
+char data[1024];
+char ip[50];
+int n;
+socklen_t len;
+FILE *fp;
+
 int main(int argc, char *argv[])
 {
 /* Create a datagram socket on which to receive. */
+	strcpy(ip, argv[1]);
 	sd = socket(AF_INET, SOCK_DGRAM, 0);
 	if(sd < 0)
 	{
@@ -42,7 +50,7 @@ int main(int argc, char *argv[])
 	/* specified as INADDR_ANY. */
 	memset((char *) &localSock, 0, sizeof(localSock));
 	localSock.sin_family = AF_INET;
-	localSock.sin_port = htons(4321);
+	localSock.sin_port = htons(5555);
 	localSock.sin_addr.s_addr = INADDR_ANY;
 	if(bind(sd, (struct sockaddr*)&localSock, sizeof(localSock)))
 	{
@@ -58,7 +66,7 @@ int main(int argc, char *argv[])
 	/* called for each local interface over which the multicast */
 	/* datagrams are to be received. */
 	group.imr_multiaddr.s_addr = inet_addr("226.1.1.1");
-	group.imr_interface.s_addr = inet_addr("192.168.32.143");
+	group.imr_interface.s_addr = inet_addr(ip);
 	if(setsockopt(sd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&group, sizeof(group)) < 0)
 	{
 		perror("Adding multicast group error");
@@ -81,5 +89,24 @@ int main(int argc, char *argv[])
 		printf("Reading datagram message...OK.\n");
 		printf("The message from multicast server is: \"%s\"\n", databuf);
 	}
+	
+	len = sizeof(localSock);
+	n = recvfrom(sd, data, 1024, 0, (struct sockaddr *) &localSock, &len);
+	data[n] = 0;
+	printf("Received from client: [%s]\n", data);
+	sendto(sd, "ok", strlen("ok"), 0, (struct sockaddr *) &localSock, &len);
+	fd = open(buf, O_RDWR | O_CREAT, 0666);
+
+	while ((n = recvfrom(sd, data, 1024, 0, (struct sockaddr *) &localSock, &len))) {
+		data[n] = 0;
+		printf("%s", data);
+		if (!(strcmp(data, "=======END"))) {
+		    break;
+		}
+		write(fp, data, n);
+	 }
+	 close(fp);
+	
+	
 	return 0;
 }
